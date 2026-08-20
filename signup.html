@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء حساب — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d;
+    --primary-container: #075e54;
+    --secondary: #006b5f;
+    --bg: #f4f6f5;
+    --border: #e3e8e6;
+    --text: #101917;
+    --text-muted: #5c6b67;
+    --error: #ba1a1a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Cairo', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .brand {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 14px;
+    background: #fbfcfc;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+  }
+  button.submit {
+    width: 100%;
+    margin-top: 24px;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.submit:hover { background: var(--primary-container); }
+  button.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg {
+    margin-top: 16px;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: none;
+  }
+  .msg.error { display: block; background: #fdecea; color: var(--error); }
+  .msg.success { display: block; background: #e6f4ea; color: #1e7e34; }
+  .switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .switch a { color: var(--primary); font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">🟢 سند</div>
+  <div class="subtitle">إنشاء حساب جديد لمؤسستك</div>
+
+  <form id="signupForm">
+    <label for="orgName">اسم المؤسسة / المتجر</label>
+    <input id="orgName" type="text" placeholder="مثال: متجر النخبة" required>
+
+    <label for="fullName">الاسم الكامل</label>
+    <input id="fullName" type="text" placeholder="اسمك" required>
+
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" type="email" placeholder="you@example.com" required>
+
+    <label for="password">كلمة المرور</label>
+    <input id="password" type="password" placeholder="8 أحرف على الأقل" minlength="8" required>
+
+    <button type="submit" class="submit" id="submitBtn">إنشاء الحساب</button>
+    <div class="msg" id="msg"></div>
+  </form>
+
+  <div class="switch">
+    لديك حساب بالفعل؟ <a href="login.html">سجّلي الدخول</a>
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  const form = document.getElementById('signupForm');
+  const msg = document.getElementById('msg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.className = 'msg ' + type;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الإنشاء...';
+    msg.className = 'msg';
+
+    const orgName = document.getElementById('orgName').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await window.sanadSupabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          organization_name: orgName,
+          full_name: fullName
+        }
+      }
+    });
+
+    if (error) {
+      showMsg(translateError(error.message), 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'إنشاء الحساب';
+      return;
+    }
+
+    if (data.session) {
+      // تسجيل الدخول تلقائيًا مفعّل — انتقل للوحة التحكم مباشرة
+      window.location.href = 'dashboard.html';
+    } else {
+      showMsg('تم إنشاء الحساب! تحقق من بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.', 'success');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'إنشاء الحساب';
+    }
+  });
+
+  function translateError(message) {
+    if (message.includes('already registered') || message.includes('already been registered')) {
+      return 'هذا البريد الإلكتروني مسجّل بالفعل. جرّبي تسجيل الدخول بدلاً من ذلك.';
+    }
+    if (message.includes('Password should be')) {
+      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.';
+    }
+    if (message.includes('valid email')) {
+      return 'يرجى إدخال بريد إلكتروني صحيح.';
+    }
+    return 'حدث خطأ: ' + message;
+  }
+</script>
+</body>
+</html>

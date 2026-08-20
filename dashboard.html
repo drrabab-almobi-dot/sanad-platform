@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d;
+    --primary-container: #075e54;
+    --secondary: #006b5f;
+    --bg: #f4f6f5;
+    --border: #e3e8e6;
+    --text: #101917;
+    --text-muted: #5c6b67;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Cairo', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { font-size: 18px; font-weight: 800; color: var(--primary); }
+  .user-box { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+  .user-box .name { font-weight: 700; }
+  .user-box .org { color: var(--text-muted); font-size: 12px; }
+  button.logout {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.logout:hover { background: #f0f4f3; }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .welcome-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .stat-card .label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-card .value { font-size: 28px; font-weight: 800; color: var(--primary); }
+  .plan-badge {
+    display: inline-block;
+    background: #e6f0ee;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-top: 8px;
+  }
+  .section-title { font-size: 16px; font-weight: 800; margin: 32px 0 14px; }
+  .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .quick-link {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 14px;
+    transition: border-color 0.15s;
+  }
+  .quick-link:hover { border-color: var(--primary); }
+  .loading { text-align: center; padding: 80px 0; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand">🟢 سند</div>
+    <div class="user-box">
+      <div>
+        <div class="name" id="userName">—</div>
+        <div class="org" id="orgName">—</div>
+      </div>
+      <button class="logout" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <main>
+    <h1>مرحبًا، <span id="greetName">—</span> 👋</h1>
+    <div class="welcome-sub">هذه لوحة التحكم الحقيقية لمنصة سند — البيانات هنا متصلة مباشرة بقاعدة البيانات.</div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">جهات الاتصال</div>
+        <div class="value" id="statContacts">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">الحملات</div>
+        <div class="value" id="statCampaigns">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">القوالب</div>
+        <div class="value" id="statTemplates">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">حالة اتصال واتساب</div>
+        <div class="value" id="statWhatsapp" style="font-size:16px;">غير متصل</div>
+        <div class="plan-badge" id="planBadge">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">إجراءات سريعة</div>
+    <div class="quick-links">
+      <a class="quick-link" href="#" onclick="alert('قريبًا — ربط واتساب الفعلي'); return false;">📱 ربط حساب واتساب</a>
+      <a class="quick-link" href="#" onclick="alert('قريبًا — إنشاء حملة'); return false;">📣 إنشاء حملة جديدة</a>
+      <a class="quick-link" href="#" onclick="alert('قريبًا — إضافة جهات اتصال'); return false;">👥 إضافة جهات اتصال</a>
+      <a class="quick-link" href="index.html">🖥️ عرض تصاميم المنصة</a>
+    </div>
+  </main>
+</div>
+
+<div class="loading" id="loadingBox">جاري التحميل...</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  (async () => {
+    const { data: { session } } = await window.sanadSupabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const user = session.user;
+
+    // جلب بيانات الملف الشخصي والمؤسسة
+    const { data: profile } = await window.sanadSupabase
+      .from('profiles')
+      .select('full_name, role, organization_id, organizations ( name, plan )')
+      .eq('id', user.id)
+      .single();
+
+    const fullName = profile?.full_name || user.email;
+    const orgName = profile?.organizations?.name || 'مؤسستي';
+    const plan = profile?.organizations?.plan || 'trial';
+
+    document.getElementById('userName').textContent = fullName;
+    document.getElementById('orgName').textContent = orgName;
+    document.getElementById('greetName').textContent = fullName;
+    document.getElementById('planBadge').textContent =
+      plan === 'trial' ? 'تجريبي' : plan === 'pro' ? 'احترافي' : plan;
+
+    const orgId = profile?.organization_id;
+
+    if (orgId) {
+      const [contactsRes, campaignsRes, templatesRes, waRes] = await Promise.all([
+        window.sanadSupabase.from('contacts').select('id', { count: 'exact', head: true }).eq('organization_id', orgId),
+        window.sanadSupabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('organization_id', orgId),
+        window.sanadSupabase.from('templates').select('id', { count: 'exact', head: true }).eq('organization_id', orgId),
+        window.sanadSupabase.from('whatsapp_connections').select('status').eq('organization_id', orgId).limit(1)
+      ]);
+
+      document.getElementById('statContacts').textContent = contactsRes.count ?? 0;
+      document.getElementById('statCampaigns').textContent = campaignsRes.count ?? 0;
+      document.getElementById('statTemplates').textContent = templatesRes.count ?? 0;
+
+      const waStatus = waRes.data?.[0]?.status;
+      document.getElementById('statWhatsapp').textContent =
+        waStatus === 'connected' ? 'متصل ✅' : 'غير متصل';
+    }
+
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  })();
+
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await window.sanadSupabase.auth.signOut();
+    window.location.href = 'login.html';
+  });
+</script>
+</body>
+</html>

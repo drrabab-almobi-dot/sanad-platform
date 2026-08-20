@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d;
+    --primary-container: #075e54;
+    --secondary: #006b5f;
+    --bg: #f4f6f5;
+    --border: #e3e8e6;
+    --text: #101917;
+    --text-muted: #5c6b67;
+    --error: #ba1a1a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Cairo', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .brand {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 14px;
+    background: #fbfcfc;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+  }
+  button.submit {
+    width: 100%;
+    margin-top: 24px;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.submit:hover { background: var(--primary-container); }
+  button.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg {
+    margin-top: 16px;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: none;
+  }
+  .msg.error { display: block; background: #fdecea; color: var(--error); }
+  .switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .switch a { color: var(--primary); font-weight: 700; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">🟢 سند</div>
+  <div class="subtitle">تسجيل الدخول إلى حسابك</div>
+
+  <form id="loginForm">
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" type="email" placeholder="you@example.com" required>
+
+    <label for="password">كلمة المرور</label>
+    <input id="password" type="password" placeholder="كلمة المرور" required>
+
+    <button type="submit" class="submit" id="submitBtn">تسجيل الدخول</button>
+    <div class="msg" id="msg"></div>
+  </form>
+
+  <div class="switch">
+    ليس لديك حساب؟ <a href="signup.html">أنشئي حسابًا جديدًا</a>
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  const form = document.getElementById('loginForm');
+  const msg = document.getElementById('msg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // إذا كان مسجّل دخول بالفعل، انتقل مباشرة للوحة التحكم
+  (async () => {
+    const { data: { session } } = await window.sanadSupabase.auth.getSession();
+    if (session) window.location.href = 'dashboard.html';
+  })();
+
+  function showMsg(text) {
+    msg.textContent = text;
+    msg.className = 'msg error';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري الدخول...';
+    msg.className = 'msg';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { error } = await window.sanadSupabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showMsg(
+        error.message.includes('Invalid login credentials')
+          ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
+          : 'حدث خطأ: ' + error.message
+      );
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'تسجيل الدخول';
+      return;
+    }
+
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>
