@@ -79,15 +79,16 @@
   .quick-link {
     background: #fff;
     border: 1px solid var(--border);
+    border-top: 3px solid var(--primary);
     border-radius: 12px;
     padding: 18px;
     text-decoration: none;
     color: var(--text);
     font-weight: 700;
     font-size: 14px;
-    transition: border-color 0.15s;
+    transition: box-shadow 0.15s, transform 0.15s;
   }
-  .quick-link:hover { border-color: var(--primary); }
+  .quick-link:hover { box-shadow: 0 4px 14px rgba(0,69,61,0.12); transform: translateY(-2px); }
   .loading { text-align: center; padding: 80px 0; color: var(--text-muted); }
 </style>
 </head>
@@ -117,6 +118,18 @@
     <h1>مرحبًا، <span id="greetName">—</span> 👋</h1>
     <div class="welcome-sub">هذه لوحة التحكم الحقيقية لمنصة سند — البيانات هنا متصلة مباشرة بقاعدة البيانات.</div>
 
+    <div class="section-title" style="margin-top:0;">الخدمات</div>
+    <div class="quick-links">
+      <a class="quick-link" href="whatsapp-connect.html">📱 ربط حساب واتساب</a>
+      <a class="quick-link" href="create-campaign.html">📣 إنشاء حملة جديدة</a>
+      <a class="quick-link" href="contacts.html">👥 إضافة جهات اتصال</a>
+      <a class="quick-link" href="templates.html">📝 قوالب الرسائل</a>
+      <a class="quick-link" href="campaigns.html">📊 عرض الحملات</a>
+      <a class="quick-link" href="account-settings.html">⚙️ إعدادات الحساب</a>
+      <a class="quick-link" href="index.html">🖥️ عرض تصاميم المنصة</a>
+    </div>
+
+    <div class="section-title">نظرة عامة على حسابك</div>
     <div class="stats">
       <div class="stat-card">
         <div class="label">جهات الاتصال</div>
@@ -135,17 +148,6 @@
         <div class="value" id="statWhatsapp" style="font-size:16px;">غير متصل</div>
         <div class="plan-badge" id="planBadge">—</div>
       </div>
-    </div>
-
-    <div class="section-title">إجراءات سريعة</div>
-    <div class="quick-links">
-      <a class="quick-link" href="whatsapp-connect.html">📱 ربط حساب واتساب</a>
-      <a class="quick-link" href="create-campaign.html">📣 إنشاء حملة جديدة</a>
-      <a class="quick-link" href="contacts.html">👥 إضافة جهات اتصال</a>
-      <a class="quick-link" href="templates.html">📝 قوالب الرسائل</a>
-      <a class="quick-link" href="campaigns.html">📊 عرض الحملات</a>
-      <a class="quick-link" href="account-settings.html">⚙️ إعدادات الحساب</a>
-      <a class="quick-link" href="index.html">🖥️ عرض تصاميم المنصة</a>
     </div>
   </main>
 </div>
