@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء حملة — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d; --primary-container: #075e54; --secondary: #006b5f;
+    --bg: #f4f6f5; --border: #e3e8e6; --text: #101917; --text-muted: #5c6b67;
+    --error: #ba1a1a; --success: #1e7e34;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Cairo','Segoe UI',sans-serif; background: var(--bg); color: var(--text); }
+  .topbar {
+    background: #fff; border-bottom: 1px solid var(--border); padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
+  }
+  .brand { font-size: 18px; font-weight: 800; color: var(--primary); }
+  .brand a { color: inherit; text-decoration: none; }
+  .nav-links { display: flex; gap: 16px; font-size: 13px; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+  .nav-links a.active { color: var(--primary); }
+  .menu-toggle {
+    display: none; background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 18px; color: var(--text);
+  }
+  @media (max-width: 780px) {
+    .menu-toggle { display: flex; }
+    .nav-links {
+      display: none; position: absolute; top: 62px; right: 16px; left: 16px;
+      background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+      flex-direction: column; align-items: stretch; gap: 2px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.1); z-index: 200;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 11px 12px; border-radius: 8px; }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg); }
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+
+  .warn-box {
+    background: #fff8e6; border: 1px solid #f0ddb0; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; line-height: 1.8; margin-bottom: 24px; color: #6b5400;
+  }
+
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  input, select { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: inherit; font-size: 14px; background: #fff; }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  button.submit {
+    width: 100%; margin-top: 8px; padding: 13px; border-radius: 10px; border: none;
+    background: var(--primary); color: #fff; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  }
+  button.submit:hover { background: var(--primary-container); }
+  button.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg { margin-top: 16px; font-size: 13px; padding: 10px 12px; border-radius: 8px; display: none; }
+  .msg.error { display: block; background: #fdecea; color: var(--error); }
+  .msg.success { display: block; background: #e6f4ea; color: var(--success); }
+  .loading { text-align: center; padding: 60px 0; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand"><a href="dashboard.html">🟢 سند</a></div>
+    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html">لوحة التحكم</a>
+      <a href="contacts.html">جهات الاتصال</a>
+      <a href="templates.html">القوالب</a>
+      <a href="campaigns.html" class="active">الحملات</a>
+      <a href="whatsapp-connect.html">ربط واتساب</a>
+      <a href="account-settings.html">الإعدادات</a>
+    </div>
+  </div>
+
+  <main>
+    <h1>إنشاء حملة جديدة</h1>
+    <div class="sub">أنشئي حملة رسائل جماعية لجهات اتصالك باستخدام أحد القوالب.</div>
+
+    <div class="warn-box" id="prereqWarn" style="display:none;"></div>
+
+    <div class="card">
+      <form id="campaignForm">
+        <div class="field">
+          <label>اسم الحملة</label>
+          <input id="campaignName" type="text" placeholder="مثال: عرض نهاية الأسبوع" required>
+        </div>
+
+        <div class="field">
+          <label>القالب</label>
+          <select id="templateSelect" required></select>
+          <div class="hint">اختاري القالب الذي سيُرسل لجهات الاتصال.</div>
+        </div>
+
+        <div class="field">
+          <label>المستلمون</label>
+          <select id="recipientsSelect">
+            <option value="all">جميع جهات الاتصال (<span id="contactCount">0</span>)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="submit" id="submitBtn">إنشاء الحملة</button>
+      </form>
+      <div class="msg" id="msg"></div>
+    </div>
+  </main>
+</div>
+
+<div class="loading" id="loadingBox">جاري التحميل...</div>
+
+<script src="supabase-config.js"></script>
+<script>
+  let ORG_ID = null;
+  let CONTACTS = [];
+  let TEMPLATES = [];
+
+  (async () => {
+    const { data: { session } } = await window.sanadSupabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await window.sanadSupabase
+      .from('profiles').select('organization_id').eq('id', session.user.id).single();
+
+    ORG_ID = profile?.organization_id;
+    if (!ORG_ID) return;
+
+    const [tplRes, contactsRes] = await Promise.all([
+      window.sanadSupabase.from('templates').select('id, name').eq('organization_id', ORG_ID).order('created_at', { ascending: false }),
+      window.sanadSupabase.from('contacts').select('id, full_name').eq('organization_id', ORG_ID)
+    ]);
+
+    TEMPLATES = tplRes.data || [];
+    CONTACTS = contactsRes.data || [];
+
+    document.getElementById('contactCount').textContent = CONTACTS.length;
+
+    const tplSelect = document.getElementById('templateSelect');
+    const submitBtn = document.getElementById('submitBtn');
+    const warn = document.getElementById('prereqWarn');
+    const missing = [];
+
+    if (TEMPLATES.length === 0) {
+      missing.push('لا يوجد لديك قوالب رسائل بعد — <a href="templates.html">أنشئي قالبًا أولًا</a>.');
+    } else {
+      tplSelect.innerHTML = TEMPLATES.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+
+    if (CONTACTS.length === 0) {
+      missing.push('لا يوجد لديك جهات اتصال بعد — <a href="contacts.html">أضيفي جهات اتصال أولًا</a>.');
+    }
+
+    if (missing.length) {
+      warn.innerHTML = missing.join('<br>');
+      warn.style.display = 'block';
+      submitBtn.disabled = true;
+    }
+
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  })();
+
+  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const msg = document.getElementById('msg');
+    msg.className = 'msg';
+    btn.disabled = true;
+    btn.textContent = 'جاري الإنشاء...';
+
+    const name = document.getElementById('campaignName').value.trim();
+    const templateId = document.getElementById('templateSelect').value;
+
+    const { data: campaign, error } = await window.sanadSupabase
+      .from('campaigns')
+      .insert({ organization_id: ORG_ID, name, template_id: templateId, status: 'draft' })
+      .select('id')
+      .single();
+
+    if (error) {
+      msg.textContent = 'حدث خطأ: ' + error.message;
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = 'إنشاء الحملة';
+      return;
+    }
+
+    const rows = CONTACTS.map(c => ({ campaign_id: campaign.id, contact_id: c.id, status: 'pending' }));
+    if (rows.length) {
+      await window.sanadSupabase.from('campaign_messages').insert(rows);
+    }
+
+    msg.textContent = `تم إنشاء الحملة بنجاح ✅ (${rows.length} رسالة في قائمة الانتظار). سيتم تفعيل الإرسال الفعلي عند ربط حساب واتساب.`;
+    msg.className = 'msg success';
+    setTimeout(() => { window.location.href = 'campaigns.html'; }, 1800);
+  });
+
+  document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+</script>
+</body>
+</html>

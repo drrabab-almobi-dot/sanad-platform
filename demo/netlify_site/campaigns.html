@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الحملات — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d; --primary-container: #075e54; --secondary: #006b5f;
+    --bg: #f4f6f5; --border: #e3e8e6; --text: #101917; --text-muted: #5c6b67;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Cairo','Segoe UI',sans-serif; background: var(--bg); color: var(--text); }
+  .topbar {
+    background: #fff; border-bottom: 1px solid var(--border); padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
+  }
+  .brand { font-size: 18px; font-weight: 800; color: var(--primary); }
+  .brand a { color: inherit; text-decoration: none; }
+  .nav-links { display: flex; gap: 16px; font-size: 13px; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+  .nav-links a.active { color: var(--primary); }
+  .menu-toggle {
+    display: none; background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 18px; color: var(--text);
+  }
+  @media (max-width: 780px) {
+    .menu-toggle { display: flex; }
+    .nav-links {
+      display: none; position: absolute; top: 62px; right: 16px; left: 16px;
+      background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+      flex-direction: column; align-items: stretch; gap: 2px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.1); z-index: 200;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 11px 12px; border-radius: 8px; }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg); }
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+  .new-btn {
+    display: inline-block; margin-bottom: 24px; padding: 11px 22px; border-radius: 8px;
+    background: var(--primary); color: #fff; text-decoration: none; font-weight: 700; font-size: 14px;
+  }
+  .new-btn:hover { background: var(--primary-container); }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+  th, td { padding: 12px 16px; text-align: right; font-size: 14px; border-bottom: 1px solid var(--border); }
+  th { background: #fafcfb; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  .status-pill { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .status-pill.draft { background: #f1f1f1; color: var(--text-muted); }
+  .status-pill.sending { background: #fff3cd; color: #8a6d00; }
+  .status-pill.completed { background: #e6f4ea; color: #1e7e34; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  .loading { text-align: center; padding: 60px 0; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand"><a href="dashboard.html">🟢 سند</a></div>
+    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html">لوحة التحكم</a>
+      <a href="contacts.html">جهات الاتصال</a>
+      <a href="templates.html">القوالب</a>
+      <a href="campaigns.html" class="active">الحملات</a>
+      <a href="whatsapp-connect.html">ربط واتساب</a>
+      <a href="account-settings.html">الإعدادات</a>
+    </div>
+  </div>
+
+  <main>
+    <h1>الحملات</h1>
+    <div class="sub">جميع حملات الرسائل الجماعية الخاصة بمؤسستك.</div>
+    <a class="new-btn" href="create-campaign.html">+ إنشاء حملة جديدة</a>
+
+    <table id="campaignsTable">
+      <thead>
+        <tr><th>اسم الحملة</th><th>الحالة</th><th>عدد الرسائل</th><th>تاريخ الإنشاء</th></tr>
+      </thead>
+      <tbody id="campaignsBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">لا يوجد حملات بعد — أنشئي أول حملة من الزر أعلاه.</div>
+  </main>
+</div>
+
+<div class="loading" id="loadingBox">جاري التحميل...</div>
+
+<script src="supabase-config.js"></script>
+<script>
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+  }
+
+  const statusLabel = { draft: 'مسودة', sending: 'قيد الإرسال', completed: 'مكتملة' };
+
+  (async () => {
+    const { data: { session } } = await window.sanadSupabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await window.sanadSupabase
+      .from('profiles').select('organization_id').eq('id', session.user.id).single();
+
+    const orgId = profile?.organization_id;
+    if (!orgId) return;
+
+    const { data: campaigns, error } = await window.sanadSupabase
+      .from('campaigns')
+      .select('id, name, status, created_at, campaign_messages(count)')
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: false });
+
+    const body = document.getElementById('campaignsBody');
+    const empty = document.getElementById('emptyState');
+    const table = document.getElementById('campaignsTable');
+
+    if (error) { console.error(error); }
+
+    if (!campaigns || campaigns.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'block';
+    } else {
+      body.innerHTML = campaigns.map(c => `
+        <tr>
+          <td>${esc(c.name)}</td>
+          <td><span class="status-pill ${c.status}">${statusLabel[c.status] || c.status}</span></td>
+          <td>${c.campaign_messages?.[0]?.count ?? 0}</td>
+          <td>${new Date(c.created_at).toLocaleDateString('ar-SA')}</td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  })();
+
+  document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+</script>
+</body>
+</html>

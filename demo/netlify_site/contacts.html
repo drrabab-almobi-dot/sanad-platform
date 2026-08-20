@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جهات الاتصال — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #00453d; --primary-container: #075e54; --secondary: #006b5f;
+    --bg: #f4f6f5; --border: #e3e8e6; --text: #101917; --text-muted: #5c6b67;
+    --error: #ba1a1a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Cairo','Segoe UI',sans-serif; background: var(--bg); color: var(--text); }
+  .topbar {
+    background: #fff; border-bottom: 1px solid var(--border); padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
+  }
+  .brand { font-size: 18px; font-weight: 800; color: var(--primary); }
+  .brand a { color: inherit; text-decoration: none; }
+  .nav-links { display: flex; gap: 18px; font-size: 14px; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+  .nav-links a.active { color: var(--primary); }
+  .menu-toggle {
+    display: none; background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 18px; color: var(--text);
+  }
+  @media (max-width: 780px) {
+    .menu-toggle { display: flex; }
+    .nav-links {
+      display: none; position: absolute; top: 62px; right: 16px; left: 16px;
+      background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+      flex-direction: column; align-items: stretch; gap: 2px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.1); z-index: 200;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 11px 12px; border-radius: 8px; }
+    .nav-links a:hover, .nav-links a.active { background: var(--bg); }
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+
+  .add-form {
+    background: #fff; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    margin-bottom: 24px;
+  }
+  .field { flex: 1; min-width: 160px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); }
+  .field input {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    font-family: inherit; font-size: 14px;
+  }
+  .field input:focus { outline: none; border-color: var(--primary); }
+  button.add-btn {
+    padding: 11px 22px; border-radius: 8px; border: none; background: var(--primary);
+    color: #fff; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+    white-space: nowrap;
+  }
+  button.add-btn:hover { background: var(--primary-container); }
+  button.add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+  th, td { padding: 12px 16px; text-align: right; font-size: 14px; border-bottom: 1px solid var(--border); }
+  th { background: #fafcfb; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  button.del-btn {
+    background: none; border: none; color: var(--error); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700;
+  }
+  .msg { margin-top: 12px; font-size: 13px; padding: 8px 12px; border-radius: 8px; display: none; }
+  .msg.error { display: block; background: #fdecea; color: var(--error); }
+  .loading { text-align: center; padding: 60px 0; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand"><a href="dashboard.html">🟢 سند</a></div>
+    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="dashboard.html">لوحة التحكم</a>
+      <a href="contacts.html" class="active">جهات الاتصال</a>
+      <a href="templates.html">القوالب</a>
+      <a href="campaigns.html">الحملات</a>
+      <a href="whatsapp-connect.html">ربط واتساب</a>
+      <a href="account-settings.html">الإعدادات</a>
+    </div>
+  </div>
+
+  <main>
+    <h1>جهات الاتصال</h1>
+    <div class="sub">أضيفي وأديري جهات اتصال عملائك — البيانات هنا محفوظة فعليًا في قاعدة البيانات.</div>
+
+    <form class="add-form" id="addForm">
+      <div class="field">
+        <label>الاسم</label>
+        <input id="fullName" type="text" placeholder="اسم جهة الاتصال" required>
+      </div>
+      <div class="field">
+        <label>رقم الجوال</label>
+        <input id="phoneNumber" type="text" placeholder="9665xxxxxxxx" required>
+      </div>
+      <button type="submit" class="add-btn" id="addBtn">إضافة</button>
+    </form>
+    <div class="msg" id="msg"></div>
+
+    <table id="contactsTable">
+      <thead>
+        <tr><th>الاسم</th><th>رقم الجوال</th><th>تاريخ الإضافة</th><th></th></tr>
+      </thead>
+      <tbody id="contactsBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">لا يوجد جهات اتصال بعد — أضيفي أول جهة اتصال بالأعلى.</div>
+  </main>
+</div>
+
+<div class="loading" id="loadingBox">جاري التحميل...</div>
+
+<script src="supabase-config.js"></script>
+<script>
+  let ORG_ID = null;
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+  }
+
+  async function loadContacts() {
+    const { data, error } = await window.sanadSupabase
+      .from('contacts')
+      .select('id, full_name, phone_number, created_at')
+      .eq('organization_id', ORG_ID)
+      .order('created_at', { ascending: false });
+
+    const body = document.getElementById('contactsBody');
+    const empty = document.getElementById('emptyState');
+    const table = document.getElementById('contactsTable');
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+
+    table.style.display = 'table';
+    empty.style.display = 'none';
+    body.innerHTML = data.map(c => `
+      <tr>
+        <td>${esc(c.full_name)}</td>
+        <td>${esc(c.phone_number)}</td>
+        <td>${new Date(c.created_at).toLocaleDateString('ar-SA')}</td>
+        <td><button class="del-btn" data-id="${c.id}">حذف</button></td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('حذف جهة الاتصال هذه؟')) return;
+        await window.sanadSupabase.from('contacts').delete().eq('id', btn.dataset.id);
+        loadContacts();
+      });
+    });
+  }
+
+  (async () => {
+    const { data: { session } } = await window.sanadSupabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await window.sanadSupabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', session.user.id)
+      .single();
+
+    ORG_ID = profile?.organization_id;
+    if (!ORG_ID) return;
+
+    await loadContacts();
+
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  })();
+
+  document.getElementById('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('addBtn');
+    const msg = document.getElementById('msg');
+    msg.className = 'msg';
+    btn.disabled = true;
+    btn.textContent = 'جاري الإضافة...';
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+
+    const { error } = await window.sanadSupabase.from('contacts').insert({
+      organization_id: ORG_ID,
+      full_name: fullName,
+      phone_number: phoneNumber
+    });
+
+    if (error) {
+      msg.textContent = 'حدث خطأ: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      document.getElementById('fullName').value = '';
+      document.getElementById('phoneNumber').value = '';
+      await loadContacts();
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'إضافة';
+  });
+
+  document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+</script>
+</body>
+</html>
