@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>جهات الاتصال — سند</title>
+<title>القوالب — سند</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,11 +17,11 @@
   body { margin: 0; font-family: 'Cairo','Segoe UI',sans-serif; background: var(--bg); color: var(--text); }
   .topbar {
     background: #fff; border-bottom: 1px solid var(--border); padding: 16px 28px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
   }
   .brand { font-size: 18px; font-weight: 800; color: var(--primary); }
   .brand a { color: inherit; text-decoration: none; }
-  .nav-links { display: flex; gap: 18px; font-size: 14px; }
+  .nav-links { display: flex; gap: 16px; font-size: 13px; flex-wrap: wrap; }
   .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 600; }
   .nav-links a.active { color: var(--primary); }
   main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
@@ -30,32 +30,32 @@
 
   .add-form {
     background: #fff; border: 1px solid var(--border); border-radius: 14px;
-    padding: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
-    margin-bottom: 24px;
+    padding: 20px; margin-bottom: 24px;
   }
-  .field { flex: 1; min-width: 160px; }
+  .field { margin-bottom: 14px; }
   .field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); }
-  .field input {
+  .field input, .field textarea {
     width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
-    font-family: inherit; font-size: 14px;
+    font-family: inherit; font-size: 14px; resize: vertical;
   }
-  .field input:focus { outline: none; border-color: var(--primary); }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--primary); }
   button.add-btn {
     padding: 11px 22px; border-radius: 8px; border: none; background: var(--primary);
     color: #fff; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
-    white-space: nowrap;
   }
   button.add-btn:hover { background: var(--primary-container); }
   button.add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
-  th, td { padding: 12px 16px; text-align: right; font-size: 14px; border-bottom: 1px solid var(--border); }
-  th { background: #fafcfb; color: var(--text-muted); font-size: 12px; font-weight: 700; }
-  tr:last-child td { border-bottom: none; }
-  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  .tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .tpl-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+  }
+  .tpl-card .name { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+  .tpl-card .body { font-size: 13px; color: var(--text-muted); white-space: pre-wrap; line-height: 1.6; margin-bottom: 12px; }
   button.del-btn {
     background: none; border: none; color: var(--error); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700;
   }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
   .msg { margin-top: 12px; font-size: 13px; padding: 8px 12px; border-radius: 8px; display: none; }
   .msg.error { display: block; background: #fdecea; color: var(--error); }
   .loading { text-align: center; padding: 60px 0; color: var(--text-muted); }
@@ -68,8 +68,8 @@
     <div class="brand"><a href="dashboard.html">🟢 سند</a></div>
     <div class="nav-links">
       <a href="dashboard.html">لوحة التحكم</a>
-      <a href="contacts.html" class="active">جهات الاتصال</a>
-      <a href="templates.html">القوالب</a>
+      <a href="contacts.html">جهات الاتصال</a>
+      <a href="templates.html" class="active">القوالب</a>
       <a href="campaigns.html">الحملات</a>
       <a href="whatsapp-connect.html">ربط واتساب</a>
       <a href="account-settings.html">الإعدادات</a>
@@ -77,29 +77,24 @@
   </div>
 
   <main>
-    <h1>جهات الاتصال</h1>
-    <div class="sub">أضيفي وأديري جهات اتصال عملائك — البيانات هنا محفوظة فعليًا في قاعدة البيانات.</div>
+    <h1>قوالب الرسائل</h1>
+    <div class="sub">أنشئي قوالب رسائل جاهزة لاستخدامها في حملاتك — محفوظة فعليًا في قاعدة البيانات.</div>
 
     <form class="add-form" id="addForm">
       <div class="field">
-        <label>الاسم</label>
-        <input id="fullName" type="text" placeholder="اسم جهة الاتصال" required>
+        <label>اسم القالب</label>
+        <input id="tplName" type="text" placeholder="مثال: ترحيب بعميل جديد" required>
       </div>
       <div class="field">
-        <label>رقم الجوال</label>
-        <input id="phoneNumber" type="text" placeholder="9665xxxxxxxx" required>
+        <label>محتوى الرسالة</label>
+        <textarea id="tplBody" rows="4" placeholder="اكتبي نص الرسالة هنا..." required></textarea>
       </div>
-      <button type="submit" class="add-btn" id="addBtn">إضافة</button>
+      <button type="submit" class="add-btn" id="addBtn">إضافة القالب</button>
+      <div class="msg" id="msg"></div>
     </form>
-    <div class="msg" id="msg"></div>
 
-    <table id="contactsTable">
-      <thead>
-        <tr><th>الاسم</th><th>رقم الجوال</th><th>تاريخ الإضافة</th><th></th></tr>
-      </thead>
-      <tbody id="contactsBody"></tbody>
-    </table>
-    <div class="empty-state" id="emptyState" style="display:none;">لا يوجد جهات اتصال بعد — أضيفي أول جهة اتصال بالأعلى.</div>
+    <div class="tpl-grid" id="tplGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">لا يوجد قوالب بعد — أضيفي أول قالب بالأعلى.</div>
   </main>
 </div>
 
@@ -115,44 +110,38 @@
     return d.innerHTML;
   }
 
-  async function loadContacts() {
+  async function loadTemplates() {
     const { data, error } = await window.sanadSupabase
-      .from('contacts')
-      .select('id, full_name, phone_number, created_at')
+      .from('templates')
+      .select('id, name, body, created_at')
       .eq('organization_id', ORG_ID)
       .order('created_at', { ascending: false });
 
-    const body = document.getElementById('contactsBody');
+    const grid = document.getElementById('tplGrid');
     const empty = document.getElementById('emptyState');
-    const table = document.getElementById('contactsTable');
 
-    if (error) {
-      console.error(error);
-      return;
-    }
+    if (error) { console.error(error); return; }
 
     if (!data || data.length === 0) {
-      table.style.display = 'none';
+      grid.innerHTML = '';
       empty.style.display = 'block';
       return;
     }
 
-    table.style.display = 'table';
     empty.style.display = 'none';
-    body.innerHTML = data.map(c => `
-      <tr>
-        <td>${esc(c.full_name)}</td>
-        <td>${esc(c.phone_number)}</td>
-        <td>${new Date(c.created_at).toLocaleDateString('ar-SA')}</td>
-        <td><button class="del-btn" data-id="${c.id}">حذف</button></td>
-      </tr>
+    grid.innerHTML = data.map(t => `
+      <div class="tpl-card">
+        <div class="name">${esc(t.name)}</div>
+        <div class="body">${esc(t.body)}</div>
+        <button class="del-btn" data-id="${t.id}">حذف</button>
+      </div>
     `).join('');
 
-    body.querySelectorAll('.del-btn').forEach(btn => {
+    grid.querySelectorAll('.del-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('حذف جهة الاتصال هذه؟')) return;
-        await window.sanadSupabase.from('contacts').delete().eq('id', btn.dataset.id);
-        loadContacts();
+        if (!confirm('حذف هذا القالب؟')) return;
+        await window.sanadSupabase.from('templates').delete().eq('id', btn.dataset.id);
+        loadTemplates();
       });
     });
   }
@@ -162,15 +151,12 @@
     if (!session) { window.location.href = 'login.html'; return; }
 
     const { data: profile } = await window.sanadSupabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', session.user.id)
-      .single();
+      .from('profiles').select('organization_id').eq('id', session.user.id).single();
 
     ORG_ID = profile?.organization_id;
     if (!ORG_ID) return;
 
-    await loadContacts();
+    await loadTemplates();
 
     document.getElementById('loadingBox').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -184,26 +170,26 @@
     btn.disabled = true;
     btn.textContent = 'جاري الإضافة...';
 
-    const fullName = document.getElementById('fullName').value.trim();
-    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+    const name = document.getElementById('tplName').value.trim();
+    const body = document.getElementById('tplBody').value.trim();
 
-    const { error } = await window.sanadSupabase.from('contacts').insert({
+    const { error } = await window.sanadSupabase.from('templates').insert({
       organization_id: ORG_ID,
-      full_name: fullName,
-      phone_number: phoneNumber
+      name,
+      body
     });
 
     if (error) {
       msg.textContent = 'حدث خطأ: ' + error.message;
       msg.className = 'msg error';
     } else {
-      document.getElementById('fullName').value = '';
-      document.getElementById('phoneNumber').value = '';
-      await loadContacts();
+      document.getElementById('tplName').value = '';
+      document.getElementById('tplBody').value = '';
+      await loadTemplates();
     }
 
     btn.disabled = false;
-    btn.textContent = 'إضافة';
+    btn.textContent = 'إضافة القالب';
   });
 </script>
 </body>
